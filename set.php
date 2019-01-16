@@ -1,6 +1,8 @@
 <?php include "txt/header.txt";?>
 
-		</div>
+	</div>
+	
+	<div id="constainer">
 		<div class="background">
 			<div class="wrapper">
 				 <div id="setLeftColumn">
@@ -212,70 +214,88 @@
 					WHERE inventory.SetID = $searchID AND inventory.ItemID = minifigs.MinifigID AND
 					inventory.ItemtypeID = 'M' AND inventory.ItemID=images.ItemID
 					LIMIT 30");
+					if(mysqli_num_rows($minifigsSearch)< 1){
+						print("<p>Inga minifigurer i detta set!</p>");
+					}
 					
-					print("<table>\n<tr>");
-					print ("<th>  </th>");
-					print ("<th> Bild </th>");
-					print ("<th> Namn </th>");
-					print ("<th> Figur ID </th>");
-					print ("<th> Antal i sats </th>");
-					print ("<th> Antal i samling </th>");
-					print ("</tr>\n");
-					
-					$availableFigGreen = array();
-					$availableFigRed = array();
-					
-					//Varje figur
-					while($minifigRow = mysqli_fetch_array($minifigsSearch)) {
-						$itemID = $minifigRow['ItemID'];
-						$itemtype = 'M';
-						$figName = $minifigRow['Minifigname'];
-						$inventQuant = $minifigRow['Quantity'];
+					else{
+						print("<table>\n<tr>");
+						print ("<th>  </th>");
+						print ("<th> Bild </th>");
+						print ("<th> Namn </th>");
+						print ("<th> Figur ID </th>");
+						print ("<th> Antal i sats </th>");
+						print ("<th> Antal i samling </th>");
+						print ("</tr>\n");
 						
-						$bitQuantity = mysqli_query($connection,
-						"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity
-						FROM inventory, collection
-						WHERE inventory.ItemID = '$itemID'
-						AND collection.SetID = inventory.SetID
-						LIMIT 30
-						"
-						);
+						$availableFigGreen = array();
+						$availableFigRed = array();
 						
-						
-						//Hämta hela bild-url
-						if($minifigRow['has_gif'] OR $minifigRow['has_largegif']){
-							$filetype = ".gif";
+						//Varje figur
+						while($minifigRow = mysqli_fetch_array($minifigsSearch)) {
+							$itemID = $minifigRow['ItemID'];
+							$itemtype = 'M';
+							$figName = $minifigRow['Minifigname'];
+							$inventQuant = $minifigRow['Quantity'];
 							
-							if(!$minifigRow['has_gif']){
-								$itemtype = 'ML';
-							};
-						}
-						else{
-							$filetype = ".jpg";
+							$bitQuantity = mysqli_query($connection,
+							"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity
+							FROM inventory, collection
+							WHERE inventory.ItemID = '$itemID'
+							AND collection.SetID = inventory.SetID
+							LIMIT 30
+							"
+							);
 							
-							if(!$minifigRow['has_jpg']){
-								$itemtype = 'ML';
-							};
-						};
-						
-						$imgsrc = $urlBase.'/'.$itemtype.'/'.$itemID.$filetype;
-						
-						//Räkna ut colQuant (bitCounter)
-						$bitCounter = 0;
-						
-						//while loop för varje rad i sökningen
-						while ($bitRow = mysqli_fetch_array($bitQuantity)){
-							$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
-							 
-							//lägga på quantity till en counter
-							$bitCounter += $quantity;
-						}
-						
-						if ($bitCounter >= $inventQuant){
-								$imgsrcAvail = '"green.svg"';
-								$availabilityText = 'Tillgänglig';
+							
+							//Hämta hela bild-url
+							if($minifigRow['has_gif'] OR $minifigRow['has_largegif']){
+								$filetype = ".gif";
 								
-								$availableFigGreen[] = 
+								if(!$minifigRow['has_gif']){
+									$itemtype = 'ML';
+								};
+							}
+							else{
+								$filetype = ".jpg";
+								
+								if(!$minifigRow['has_jpg']){
+									$itemtype = 'ML';
+								};
+							};
+							
+							$imgsrc = $urlBase.'/'.$itemtype.'/'.$itemID.$filetype;
+							
+							//Räkna ut colQuant (bitCounter)
+							$bitCounter = 0;
+							
+							//while loop för varje rad i sökningen
+							while ($bitRow = mysqli_fetch_array($bitQuantity)){
+								$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
+								 
+								//lägga på quantity till en counter
+								$bitCounter += $quantity;
+							}
+							
+							if ($bitCounter >= $inventQuant){
+									$imgsrcAvail = '"green.svg"';
+									$availabilityText = 'Tillgänglig';
+									
+									$availableFigGreen[] = 
+									"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
+									<td><img src=$imgsrc alt=$figName></td>
+									<td>$figName</td>
+									<td>$itemID</td>
+									<td>$inventQuant</td>
+									<td>$bitCounter</td>
+									</tr>\n";
+									
+								}
+							else{
+								$imgsrcAvail = '"red.svg"';
+								$availabilityText = 'Ej tillgänglig';
+								
+								$availableFigRed[] = 
 								"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
 								<td><img src=$imgsrc alt=$figName></td>
 								<td>$figName</td>
@@ -283,23 +303,10 @@
 								<td>$inventQuant</td>
 								<td>$bitCounter</td>
 								</tr>\n";
-								
-							}
-						else{
-							$imgsrcAvail = '"red.svg"';
-							$availabilityText = 'Ej tillgänglig';
-							
-							$availableFigRed[] = 
-							"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
-							<td><img src=$imgsrc alt=$figName></td>
-							<td>$figName</td>
-							<td>$itemID</td>
-							<td>$inventQuant</td>
-							<td>$bitCounter</td>
-							</tr>\n";
-						};
+							};
 					
-					}
+						}
+					}	
 			
 					for ( $i = 0; $i < count($availableFigRed); $i++) {
 						print $availableFigRed[$i];
@@ -328,137 +335,143 @@
 						inventory.ColorID = images.ColorID AND inventory.ColorID = colors.ColorID
 						LIMIT 30");
 						
-						print("<table>\n<tr>");
-						print ("<th>  </th>");
-						print ("<th> Bild </th>");
-						print ("<th> Namn </th>");
-						print ("<th> FigurID </th>");
-						print ("<th> Färg </th>");
-						print ("<th> Antal i sats </th>");
-						print ("<th> Antal i samling </th>");
-						print ("</tr>\n");
-						
-						$availableGreen= array();
-						$availableYellow = array();
-						$availableRed = array();
-						//$finnsinte[] = $row;
-						
-						//Varje bit
-						while($partsRow = mysqli_fetch_array($partsSearch)) {
-							
-							$itemID = $partsRow['ItemID'];
-							$itemtype = 'P';
-							$partName = $partsRow['Partname'];
-							$colorID = $partsRow['ColorID'];
-							$inventQuant = $partsRow['Quantity'];
-							$colorName = $partsRow['Colorname'];
-							
-							$bitQuantity = mysqli_query($connection,
-							"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity, inventory.ColorID
-							FROM inventory, collection
-							WHERE inventory.ItemID = '$itemID'
-							AND collection.SetID = inventory.SetID 
-							LIMIT 1000"
-							);
-							
-							
-							//Hämta hela bild-url
-							if($partsRow['has_gif'] OR $partsRow['has_largegif']){
-								$filetype = ".gif";
-							
-								if($partsRow['has_gif']){
-									$itemtype = $itemtype."/".$colorID;
-								}
-								else {
-									$itemtype = 'PL';
-								};
-							}
-							else{
-								$filetype = ".jpg";
-								
-								if($partsRow['has_jpg']){
-									$itemtype = $itemtype."/".$colorID;
-								}
-								else {
-									$itemtype = 'PL';
-								};
-							};
-							
-							$imgsrc = $urlBase.'/'.$itemtype.'/'.$itemID.$filetype;
-							
-							//Räkna ut colQuant (bitCounter)
-							$bitCounter = 0;
-							$mixedColorCounter = 0;
-							
-							//while loop för varje rad i sökningen
-							while ($bitRow = mysqli_fetch_array($bitQuantity)){
-								$tempColorID = $bitRow['ColorID'];
-								
-								//$quantity = $bitRow['invQuantity'] ;
-								$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
-								 
-								//lägga på quantity till en counter
-								if ($tempColorID == $colorID) {
-									$bitCounter += $quantity;
-								};
-								
-								//mixedColorCounter är antalet av en bit, oavsett färg
-								$mixedColorCounter += $quantity;
-								
-							}
-							
-							//AVAILABILITY-FÄRG
-							//OBS: Lägg till counter för fel färg i while-loopen
-							
-							//Testa om antal bitar i samlingen uppnår antal i satsen 
-							/*if($bitCounter < $inventQuant){
-								$imgsrcAvail = 'red';
-							}*/
-							if ($bitCounter >= $inventQuant){
-								$imgsrcAvail = '"green.svg"';
-								$availabilityText = 'Tillgänglig';
-								
-								$availableGreen[] = 
-								"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
-								<td><img src=$imgsrc alt=$partName></td>
-								<td>$partName</td>
-								<td>$itemID</td>
-								<td>$colorName</td>
-								<td>$inventQuant</td>
-								<td>$bitCounter ($mixedColorCounter)</td>
-								</tr>\n";
-								
-							}
-							else if($mixedColorCounter >= $inventQuant){
-								$imgsrcAvail = '"yellow.svg"';
-								$availabilityText = 'Tillgänglig i annan färg';
-								
-								$availableYellow[] = 
-								"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
-								<td><img src=$imgsrc alt=$partName></td>
-								<td>$partName</td>
-								<td>$itemID</td>
-								<td>$colorName</td>
-								<td>$inventQuant</td>
-								<td>$bitCounter ($mixedColorCounter)</td>
-								</tr>\n";
-							}
-							else{
-								$imgsrcAvail = '"red.svg"';
-								$availabilityText = 'Ej tillgänglig';
-								
-								$availableRed[] = 
-								"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
-								<td><img src=$imgsrc alt=$partName></td>
-								<td>$partName</td>
-								<td>$itemID</td>
-								<td>$colorName</td>
-								<td>$inventQuant</td>
-								<td>$bitCounter ($mixedColorCounter)</td>
-								</tr>\n";
-							};
-						
+						if(mysqli_num_rows($partsSearch)< 1){
+						print("<p>Inga bitar i detta set!</p>");
 						}
+						
+						else{
+							print("<table>\n<tr>");
+							print ("<th>  </th>");
+							print ("<th> Bild </th>");
+							print ("<th> Namn </th>");
+							print ("<th> FigurID </th>");
+							print ("<th> Färg </th>");
+							print ("<th> Antal i sats </th>");
+							print ("<th> Antal i samling </th>");
+							print ("</tr>\n");
+							
+						}	
+							$availableGreen= array();
+							$availableYellow = array();
+							$availableRed = array();
+							//$finnsinte[] = $row;
+						
+							//Varje bit
+							while($partsRow = mysqli_fetch_array($partsSearch)) {
+								
+								$itemID = $partsRow['ItemID'];
+								$itemtype = 'P';
+								$partName = $partsRow['Partname'];
+								$colorID = $partsRow['ColorID'];
+								$inventQuant = $partsRow['Quantity'];
+								$colorName = $partsRow['Colorname'];
+								
+								$bitQuantity = mysqli_query($connection,
+								"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity, inventory.ColorID
+								FROM inventory, collection
+								WHERE inventory.ItemID = '$itemID'
+								AND collection.SetID = inventory.SetID 
+								LIMIT 1000"
+								);
+								
+								
+								//Hämta hela bild-url
+								if($partsRow['has_gif'] OR $partsRow['has_largegif']){
+									$filetype = ".gif";
+								
+									if($partsRow['has_gif']){
+										$itemtype = $itemtype."/".$colorID;
+									}
+									else {
+										$itemtype = 'PL';
+									};
+								}
+								else{
+									$filetype = ".jpg";
+									
+									if($partsRow['has_jpg']){
+										$itemtype = $itemtype."/".$colorID;
+									}
+									else {
+										$itemtype = 'PL';
+									};
+								};
+								
+								$imgsrc = $urlBase.'/'.$itemtype.'/'.$itemID.$filetype;
+								
+								//Räkna ut colQuant (bitCounter)
+								$bitCounter = 0;
+								$mixedColorCounter = 0;
+								
+								//while loop för varje rad i sökningen
+								while ($bitRow = mysqli_fetch_array($bitQuantity)){
+									$tempColorID = $bitRow['ColorID'];
+									
+									//$quantity = $bitRow['invQuantity'] ;
+									$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
+									 
+									//lägga på quantity till en counter
+									if ($tempColorID == $colorID) {
+										$bitCounter += $quantity;
+									};
+									
+									//mixedColorCounter är antalet av en bit, oavsett färg
+									$mixedColorCounter += $quantity;
+									
+								}
+								
+								//AVAILABILITY-FÄRG
+								//OBS: Lägg till counter för fel färg i while-loopen
+								
+								//Testa om antal bitar i samlingen uppnår antal i satsen 
+								/*if($bitCounter < $inventQuant){
+									$imgsrcAvail = 'red';
+								}*/
+								if ($bitCounter >= $inventQuant){
+									$imgsrcAvail = '"green.svg"';
+									$availabilityText = 'Tillgänglig';
+									
+									$availableGreen[] = 
+									"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
+									<td><img src=$imgsrc alt=$partName></td>
+									<td>$partName</td>
+									<td>$itemID</td>
+									<td>$colorName</td>
+									<td>$inventQuant</td>
+									<td>$bitCounter ($mixedColorCounter)</td>
+									</tr>\n";
+									
+								}
+								else if($mixedColorCounter >= $inventQuant){
+									$imgsrcAvail = '"yellow.svg"';
+									$availabilityText = 'Tillgänglig i annan färg';
+									
+									$availableYellow[] = 
+									"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
+									<td><img src=$imgsrc alt=$partName></td>
+									<td>$partName</td>
+									<td>$itemID</td>
+									<td>$colorName</td>
+									<td>$inventQuant</td>
+									<td>$bitCounter ($mixedColorCounter)</td>
+									</tr>\n";
+								}
+								else{
+									$imgsrcAvail = '"red.svg"';
+									$availabilityText = 'Ej tillgänglig';
+									
+									$availableRed[] = 
+									"<td><img class='availInfo' src=$imgsrcAvail alt=$availabilityText></td>
+									<td><img src=$imgsrc alt=$partName></td>
+									<td>$partName</td>
+									<td>$itemID</td>
+									<td>$colorName</td>
+									<td>$inventQuant</td>
+									<td>$bitCounter ($mixedColorCounter)</td>
+									</tr>\n";
+								};
+							
+							}
 						
 						//ev array merge
 						for ( $i = 0; $i < count($availableRed); $i++) {
@@ -481,5 +494,7 @@
 				?>
 			</div>
 		</div>
+		</div>
+		<?php include "txt/footer.txt";?>
 	</body>
 </html>
