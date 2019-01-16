@@ -1,6 +1,7 @@
 <?php include "txt/header.txt";?>
 
 		</div>
+		<?php include "txt/help.txt";?>
 		<div class="background">
 			<div class="wrapper">
 				<div class="searchBar">

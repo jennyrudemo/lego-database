@@ -1,0 +1,12 @@
+<?php
+if(isset($_COOKIE['rbutton']) && $_COOKIE['rbutton']=='sbid')
+{
+	print "<input type='radio' name='searchorder' value='sbname'> Search by Setname<br>";
+	print "<input type='radio' name='searchorder' value='sbid' checked='checked'> Search by SetID<br>";
+}
+else
+{
+	print "<input type='radio' name='searchorder' value='sbname' checked='checked'> Search by Setname<br>";
+	print "<input type='radio' name='searchorder' value='sbid'> Search by SetID<br>";
+}
+?>

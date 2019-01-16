@@ -1,0 +1,34 @@
+﻿<!doctype html>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>LEGODATABASEN - sök här!</title>
+		<link href="style.css" media="screen" rel="stylesheet" type="text/css"/>
+		<link href="https://fonts.googleapis.com/css?family=Indie+Flower" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+		<meta http-equiv="refresh" content="300">
+		<script src="reload.js"></script>
+	</head>
+
+	<body>
+
+		<div id="header"><!--Värt att ändra till ett header-element?-->
+			<div id="toprow">
+
+			  <div id="groupName">
+				<h2 class="headerText">Grupp 1</h2>
+			  </div>
+
+			   <div id="helpButton" onclick="help_window()">
+				<h2 class="headerText">?</h2>
+			  </div>
+
+			</div>
+
+			<a id="title_link" href="start.php">
+				<div id="title">
+				  <h1 class="headline" class="headerText"> TITEL </h1>
+				</div>
+			</a>
+		<!-- Kom ihåg att avsluta header-div för varje enskild sida -->

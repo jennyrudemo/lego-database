@@ -1,0 +1,23 @@
+<div id="help_box">
+				<h1> HJÄLP </h1>
+				
+				<div class="text_box">
+				<h3>VAD KOMMER MIN SÖKNING ATT GE FÖR SVAR?</h3>
+				<p>
+					Sökningen kommer att resultera i att satser som motsvarar din sökning visas. 
+					Från denna sida kan du sedan välja en specifik sats och kolla på mer information 
+					om denna sats och se hur den personliga samlingen överensstämmer med de bitar som 
+					behövs för att bygga legosatsen. Spännande!
+				</p>
+				
+				<h3>HUR SÖKER JAG PÅ EN SATS?</h3>
+				
+				<p>Det är bara att skriva in 
+				antingen sats eller sats-ID i sökrutan och sedan antingen klicka på sökknappen eller trycka enter på ditt skrivbord
+				<p>
+				
+				</div>
+				<div id="exit">
+				<button id="helpExit" onclick="help_window()">EXIT</button>
+				</div>
+	</div>

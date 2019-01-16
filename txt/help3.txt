@@ -1,0 +1,29 @@
+	<div id="help_box2">
+				<h1> HJÄLP </h1>
+				
+				<div class="text_box">
+					<h3> VAD BETYDER DE GRÖNA/GULA/RÖDA CIRKLARNA? </h3>
+
+					<p>De färgade cirklarna beskriver huruvida en bit finns i samlarens samling eller inte. Grönt betyder att den finns, rött att den inte finns. 
+					För bitarna/delarna så finns även gula cirklar, vilka indikerar att du har tillräckligt många av den biten, med ersättningsbitar i en annan färg, för att bygga satsen.
+					Då minifigurerna inte finns i en annan färg har dessa endast röda och gröna cirklar.</p>
+
+					<h3>VAD MENAS MED SIFFRAN (numret? sifferkombinationer?) INOM PARANTES I KOLUMNEN ”ANTAL I SAMLING”? </h3>
+
+					<p>I ”Antal i samling” finns två siffror (ANNAT NAMN?), den första står för hur många bitar du har av en bit i rätt färg. Siffran (?) 
+					inom parentes anger hur många du har totalt av biten i alla färger.</p>
+
+					<h3> VARFÖR VISAR SIDAN ATT DET FINNS NOLL BITAR I EN SATS? </h3>
+
+					<p>Tyvärr beror detta på databasen som informationen kommer ifrån. Förmodligen är det en så pass gammal legosats att informationen inte finns i databasen. Vi beklagar detta.</p>
+
+					<h3>HUR KAN JAG GÖRA EN NY SÖKNING?</h3>
+
+					<p>Enkelt! Det är bara att klicka på titel för att komma tillbaka till den första söksidan.</p>
+
+				
+				</div>
+				<div id="exit">
+				<button id="helpExit" onclick="help_window()">EXIT</button>
+				</div>
+	</div>

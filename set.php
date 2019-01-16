@@ -13,7 +13,7 @@
 						}
 						//$searchID = $_GET['searchID'];//
 						$searchID = "'".$_GET["searchID"]."'";
-						print "$searchID";
+						
 						//$searchID = "'3342-1'";
 						
 						$urlBase="http://www.itn.liu.se/~stegu76/img.bricklink.com/";

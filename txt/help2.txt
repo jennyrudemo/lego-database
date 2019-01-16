@@ -1,0 +1,23 @@
+	<div id="help_box2">
+				<h1> HJÄLP </h1>
+				
+				<div class="text_box">
+					<h3> HUR KAN JAG SE EN SPECIFIK SATS? </h3>
+
+					<p> Klicka någonstans på rutan för satsen så skickas du vidare till informationssidan om satsen där du även kan se vilka bita som ingår i den satsen. Skoj! </p>
+
+					<h3> HUR FILTRERAR JAG MIN SÖKNING? </h3>
+
+					<p> I rutan till höger om sökresultaten kan du göra ytterligare finjusteringar kring hur du ser alla satser som passar din sökning.
+					Här kan du välja att exempelvis visa resultatet i bokstavsordning eller efter vilket år satsen släpptes. </p>
+
+					<h3> HUR GÖR JAG EN NY SÖKNING? </h3>
+
+					<p>Antingen kan du söka i sökfönstret ovanför sökresultatet eller klicka på titeln/headern/det blåa fältet för att komma tillbaka till den första söksidan.</p>
+
+				
+				</div>
+				<div id="exit">
+				<button id="helpExit" onclick="help_window()">EXIT</button>
+				</div>
+	</div>

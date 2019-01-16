@@ -1,3 +1,4 @@
+
 <?php
 	//om sökrutan är tom sök inget
 	
@@ -37,7 +38,6 @@
 			{
 				$limit = 30;
 			}
-
 			
 			print "GET:". $_GET["searchorder"]. "end ";
 			
@@ -84,7 +84,6 @@
 		print "GET:". $_GET["search"];
 		
 	
-
 	}
 	else{
 		echo "din sökning:".$_GET['search'];

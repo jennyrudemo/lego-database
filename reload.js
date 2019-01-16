@@ -1,10 +1,10 @@
-window.onload = function() {
+window.onload = function hej() {
 				if(!window.location.hash) {
 				window.location = window.location + '#reload';
 				window.location.reload();
 				}
-			}
-
+				}
+				
 function help_window() {
 	var div = document.getElementById("help_box");
 	var blur = document.getElementById("container");
