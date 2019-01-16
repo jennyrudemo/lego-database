@@ -137,7 +137,7 @@
 						
 						$setCounter += 1;
 						if( $setCounter == $itemsPerPage){
-							print("<p>HEJ!</p>");
+							
 							$pageCounter += 1;
 							break;
 						}
