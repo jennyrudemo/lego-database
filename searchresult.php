@@ -27,10 +27,7 @@
 					</form>
 				</div>
 				<!-- php start-->
-				<?php
-				print("<p>Visar ANTAL resultat för sökordet ".$_GET['search']."...</p>");
-				?>
-				<div id="searchResult">
+				<!--<div id="searchResult">
 					<!--
 					<table>
 					
@@ -44,9 +41,7 @@
 		<?php
 
 				$setCounter = 0;
-				
-				print("<p>Visarresultat för sökordet ".$_GET['search']."...</p>");
-				
+			
 				print('<div id="searchResult">');
 				$link = mysqli_connect("mysql.itn.liu.se" ,"lego","", "lego");
 					
@@ -57,7 +52,16 @@
 						echo "Debugging error: " . mysqli_connect_error() . PHP_EOL;
 						exit;
 					}
+					
 					include "search.php";
+					
+					$num_results = mysqli_num_rows($result);
+					
+					setcookie("NumResults",$num_results, time()+(60*60*24*30));
+					
+					print("<p>Visar ".($num_results+$offset)." resultat för sökordet <b>".$_GET['search']."</b>:</p>");
+					
+					
 					//Sidan ska söka på ett setId elr setnamn, ge förslag på matchande sökresultat. Skriver man något som matchar 100% så kmr detta bara. Annars visas de som matchar fast i ordning.
 					//Koppla upp <li> blog.php?order=asc;<li> blog.php?order=desc&limit=10 colors.Colorname LIKE "%'.$_GET["search"].'%" OR Setname LIKE "%'.$_GET["search"].'%"  ;
 					//Search keyword thingy:
@@ -136,9 +140,8 @@
 						print("</li>");
 						
 						$setCounter += 1;
-						if( $setCounter == $itemsPerPage){
+						if( $setCounter === $itemsPerPage){
 							
-							$pageCounter += 1;
 							break;
 						}
 						
@@ -150,28 +153,25 @@
 				?>
 					<!--</table>-->
 					<div id="arrows">
-						<form name="pagination" id="pagination" action ="searchresult.php" method="GET">
-							<button  id="prev" name="prev" value="2" onclick="changePage();" /><</button>
-							<button  id="next" name="next" value="2" onclick="paginationNext"/>></button>
-						</form>
+						<?php 
+							
+							$prevPage = $page - 1;
+							$nextPage = $page + 1;
+							$prevUrl = "searchresult.php?search=".$sequered."&searchorder=".$searchorder."&page="."$prevPage";
+							$nextUrl = "searchresult.php?search=".$sequered."&searchorder=".$searchorder."&page="."$nextPage";
+							
+							if($page > 1){
+							print("<div id = 'prevButton'><a href=$prevUrl>Föregående sida</a></div>");
+							}
+							print("$page");
+							if($page  < (($num_results+$offset)/$itemsPerPage)){
+							//räkna antal sidor (sökresultat/$itemsPerPage)
+							print("<div id='nextButton'><a href=$nextUrl>Nästa sida</a></div>");
+							}
+							?>
 					</div>
 					
-					<form id="pagination" name="pagination" action="searchresult.php" method="GET">
-						<input id="prev2" name="prev" type="button" value="4" onclick="changePage();">
-						<input type="submit" value="submit"/>
-					</form>
 					
-					<script type="text/javascript">
-						function changePage()
-						{
-							//Change value of button
-							document.getElementById("prev").value = "3";
-						}
-					</script>
-					
-					
-					</script>
-				
 				</div>
 				
 				
@@ -182,6 +182,6 @@
 				
 			</div>
 		</div>
-		
+		<?php include "txt/footer.txt";?>
 	</body>
 </html>
