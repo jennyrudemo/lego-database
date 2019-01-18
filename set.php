@@ -15,12 +15,18 @@
 							if (!$connection) {
 								die ('MySQL connection error.');
 							}
-							//$searchID = $_GET['searchID'];//
+							
+							//Hämta sökord från URL
 							$searchID = "'".$_GET["searchID"]."'";
 							
-							//$searchID = "'3342-1'";
-							
 							$urlBase="http://www.itn.liu.se/~stegu76/img.bricklink.com/";
+							
+							
+							/***********************
+							*       SETINFO        *
+							***********************/
+							
+							//Fråga till databasen
 							$contents = mysqli_query($connection,
 							"SELECT sets.Setname, sets.SetID, sets.Year, categories.Categoryname, images.has_gif,
 							images.has_jpg, images.has_largegif, images.has_largejpg
@@ -28,41 +34,42 @@
 							WHERE sets.SetID = $searchID AND sets.CatID = categories.CatID AND images.ItemID = sets.SetID
 							LIMIT 4");
 							
-				
-							
 							//Skriver ut satsnamn, sats ID, år och katergori
 							while($row = mysqli_fetch_array($contents)){
 								
-								//För bild
+								//Variabeldeklaration - bildkälla
 								$SetID = $row['SetID'];
-								$itemtype = 'S';
-								$filetype;
+								$itemtype = 'SL';
+								$filetype = ".gif";
 								
-								if($row['has_gif'] OR $row['has_largegif']){
-									$filetype = ".gif";
+								//Väljer i första hand stor bild och av dem gif-format
+								if(!($row['has_largejpg'] OR $row['has_largegif'])){
+									$itemtype = 'S';
 									
-									if($row['has_largegif']){
-									$itemtype = 'SL';
+									if(!($row['has_gif'])){
+										$filetype = ".jpg";
 									};
 								}
-							
 								else{
-									$filetype = ".jpg";
-									
-									if($row['has_largejpg']){
-									$itemtype = 'SL';
+									if(!($row['has_largegif'])){
+										$filetype = ".jpg";
 									};
 								};
 								
-								
+								//Skriver ihop bildkällan
 								$fileName = $itemtype."/".$SetID.$filetype;
 								$imgsrc = $urlBase.$fileName;
+								
+								//Skriver ut bilden
 								print("<img src= $imgsrc alt=$fileName>");
-		
+								
+								
+								//Variabeldeklaration - satsinformation
 								$Setname = $row['Setname'];
 								$SetYear = $row['Year'];
 								$SetCat = $row['Categoryname'];
 								
+								//Skriver ut satsinformationen
 								print("<h3>$Setname</h3>\n");
 								print("<p> SetID: $SetID </p> \n");
 								print("<p> År: $SetYear </p> \n");
@@ -71,19 +78,25 @@
 							}
 							
 				
-							// Räknare för antal totala bitar i ett set
+							//Totalt bitar i ett set
+							
 							$setQuantity = mysqli_query($connection,
 							"SELECT inventory.Quantity
 							FROM inventory
 							WHERE inventory.SetID=$searchID AND (inventory.ItemtypeID = 'P' OR inventory.ItemtypeID = 'M')");
 							
+							//Räknar totalt antal bitar i set
 							$totSetQuantity = 0;
+							
+							//För varje bit i satsen läggs antalet av biten till $totSetQuantity
 							while($quantRow = mysqli_fetch_array($setQuantity)) {
 								$totSetQuantity += $quantRow['Quantity'];
 							}
 							
 							print("<p>Antal bitar: $totSetQuantity</p>\n");
 							
+							
+							//Bitar i setet som finns i samling
 							$collectionQuant = mysqli_query($connection,
 							"SELECT collection.Quantity
 							FROM collection
@@ -91,6 +104,7 @@
 							
 							
 							//Kollar om satsen finns i samling
+							//Annars, kolla hur många av satsen bitar som finns i övriga satser i samlingen
 							if($colQuantRow = mysqli_fetch_array($collectionQuant)){
 								
 								$colQuant= $colQuantRow['Quantity'];
@@ -98,54 +112,47 @@
 								print("<p>Satsen finns!</p>");
 								print("<p>Antal av denna sats: $colQuant </p>");
 							}
+							//För varje bit i sökta satsen, undersök om biten finns i annan sats i samlingen
 							else {
-								//Om ej i samling: kolla hur många av satsens bitar som finns i samling
 								
-								//Hur många av bitarna i söksatsen finns i andra satser i samlingen?
-								
-								//För varje bit i sökta satsen vill vi kolla om den biten finns i
-								//någon annan sats i samlingen
-								
+								//Fråga efter itemID, antal och färg för alla bitar i sökta satsen
 								$partsInSet = mysqli_query($connection,
 								"SELECT inventory.ItemID, inventory.Quantity, inventory.ColorID
 								FROM inventory
 								WHERE inventory.SetID=$searchID AND (inventory.ItemtypeID = 'P' OR inventory.ItemtypeID = 'M')"
 								);
 								
-								//Display alla bitar och figurer i satsen som vi söker på - IN PROGRESS
-								//print("<table>");
-								
-								//lägg till counter för samlarens bitar (som räknas i while loopen) (totPartsCounter)
+								//Räknare för alla bitar i samlingen som tillhör satsen
 								$totPartsCounter = 0;
 								
+								//Loopar varje bit i det sökta setet
 								while($setRow = mysqli_fetch_array($partsInSet)){
-									//while loop för varje bit i det sökta setet
+									
 									$itemID = $setRow['ItemID'];
 									$colorID = $setRow['ColorID'];
-									$quantGoal = $setRow['Quantity'];
+									$quantGoal = $setRow['Quantity']; //antal av en viss bit i satsen
 									
-									//sökning på collections mm, se bild på Trello
-									//kommer ge antal av biten för varje setID, en rad för varje SetID
+									//Frågar efter specifik bit som finns i samlingen
+									//Ger antal av biten i varje sats den finns
+									//samt antal av satsen som finns i samlingen
 									$bitQuantity = mysqli_query($connection,
 									"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity
 									FROM inventory, collection
 									WHERE inventory.ItemID = '$itemID' AND inventory.ColorID = $colorID
-									AND collection.SetID = inventory.SetID");									
-									//varaibel counter
+									AND collection.SetID = inventory.SetID");	
+									
+									//Räknare för totalt antal av specifik bit
 									$bitCounter = 0;
 									
-									//while loop för varje rad i sökningen
+									//Loopar för varje sats i samlingen som biten finns i
 									while ($bitRow = mysqli_fetch_array($bitQuantity)){
 										$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
 										
-										//lägga på quantity till en counter
 										$bitCounter += $quantity;
 									}
 									
-									//när raderna är slut och om counter < quant_goal: return counter
-									//counter eller countGoal ska läggas till i den totala countern (fullCounter)
-									//testa om counter >= quant_goal(el counterGoal)
-										//om den når det: lägg countGoal i totPartsCounter
+									//Testar om antalen av biten är störst i samlingen eller i satsen
+									//$totPartsCounter tilldelas det mindre av värdena
 									if ($bitCounter < $quantGoal) {
 										$totPartsCounter += $bitCounter;
 									}
@@ -155,20 +162,19 @@
 									
 								}
 								
-								//Skriv ut fullCounter i "Varav i samling:"
+								//Om samlingen innehåller fler av en bit än vad som behövs till satsen
+								//skrivs antalet som behövs till satsen ut. 
 								print("<p>Varav i samling (från andra satser): $totPartsCounter</p>");
 								
-								
-								//print("</table>");
 							}
 							
-							//Note: i tabellen: skriv ut totalt antal bitar i samlingen (även om inte alla behövs till att bygga ett set)
-							
-							
-							
-							
-							
+					//Avsluta divven för satsinformation
 					print("</div>");
+					
+					
+					/***********************
+					*  AVAILABILITY-INFO   *
+					***********************/
 					
 					print("<div id='availabilityInfo'>");
 					print("
@@ -187,9 +193,11 @@
 							</tr>
 							</table> ");
 						
+					//Avsluta availability info	
 					print("</div>");
+					
+				//Avsluta vänstra kolumnen
 				 print("</div>");
-				 
 				 
 				 
 				 print("<div id='setTable'>");
@@ -201,16 +209,18 @@
 					
 					print ("<h3>Minifigurer</h3>");
 					
+					//Frågar efter minifigurerna i det sökta setet
 					$minifigsSearch= mysqli_query($connection,
 					"SELECT minifigs.Minifigname, inventory.ItemID, inventory.Quantity,
 					images.has_gif, images.has_jpg, images.has_largegif, images.has_largejpg
 					FROM inventory, minifigs, images
 					WHERE inventory.SetID = $searchID AND inventory.ItemID = minifigs.MinifigID AND
 					inventory.ItemtypeID = 'M' AND inventory.ItemID=images.ItemID");
+					
+					//Testar om sökningen gett ett resultat
 					if(mysqli_num_rows($minifigsSearch)< 1){
 						print("<p>Inga minifigurer i detta set!</p>");
 					}
-					
 					else{
 						print("<table class='left_float'>\n<tr>");
 						print ("<th>  </th>");
@@ -220,17 +230,19 @@
 						print ("<th> Antal i sats </th>");
 						print ("<th> Antal i samling </th>");
 						print ("</tr>\n");
-					}	
-						$availableFigGreen = array();
-						$availableFigRed = array();
 						
-						//Varje figur
+						$availableFigGreen = array(); //figurer som finns i samlingen
+						$availableFigRed = array(); //figurer som inte finns i samlingen
+							
+						//Loopar för varje figur i satsen
 						while($minifigRow = mysqli_fetch_array($minifigsSearch)) {
 							$itemID = $minifigRow['ItemID'];
-							$itemtype = 'M';
+							$itemtype = 'ML';
+							$filetype = ".jpg";
 							$figName = $minifigRow['Minifigname'];
-							$inventQuant = $minifigRow['Quantity'];
+							$inventQuant = $minifigRow['Quantity']; //antalet av figuren i sökta satsen
 							
+							//Ger antalet av figuren för varje sats den finns i och antalet av den satsen
 							$bitQuantity = mysqli_query($connection,
 							"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity
 							FROM inventory, collection
@@ -238,35 +250,32 @@
 							AND collection.SetID = inventory.SetID");
 							
 							
-							//Hämta hela bild-url
-							if($minifigRow['has_gif'] OR $minifigRow['has_largegif']){
-								$filetype = ".gif";
+							//Undersöka om liten bild finns, sedan om gif finns
+							if($minifigRow['has_gif'] OR $minifigRow['has_jpg']){
+								$itemtype = 'M';
 								
-								if(!$minifigRow['has_gif']){
-									$itemtype = 'ML';
+								if($minifigRow['has_gif']){
+									$filetype = ".gif";
 								};
 							}
-							else{
-								$filetype = ".jpg";
-								
-								if(!$minifigRow['has_jpg']){
-									$itemtype = 'ML';
-								};
+							else if($minifigRow['has_largegif']){
+								$filetype = ".gif";
 							};
 							
+							//Bildkälla
 							$imgsrc = $urlBase.'/'.$itemtype.'/'.$itemID.$filetype;
 							
-							//Räkna ut colQuant (bitCounter)
+							//Räknare för antal av figuren i hela samlingen
 							$bitCounter = 0;
 							
-							//while loop för varje rad i sökningen
+							//Loopar för varje sats figuren finns med i
 							while ($bitRow = mysqli_fetch_array($bitQuantity)){
 								$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
 								 
-								//lägga på quantity till en counter
 								$bitCounter += $quantity;
 							}
 							
+							//Jämför antalet av figuren i samlingen mot vad som behövs i satsen
 							if ($bitCounter >= $inventQuant){
 									$imgsrcAvail = '"img/green.svg"';
 									$availabilityText = 'Tillgänglig';
@@ -281,7 +290,7 @@
 									<td>$bitCounter</td>
 									</tr>\n";
 									
-								}
+							}
 							else{
 								$imgsrcAvail = '"img/red.svg"';
 								$availabilityText = 'Ej tillgänglig';
@@ -298,17 +307,20 @@
 							};
 					
 						}
-						
-			
-					for ( $i = 0; $i < count($availableFigRed); $i++) {
-						print $availableFigRed[$i];
-					}
-					for ( $i = 0; $i < count($availableFigGreen); $i++) {
-						print $availableFigGreen[$i];
-					}
+							
+						//Skriver ut figurer som inte finns tillräckligt av
+						for ( $i = 0; $i < count($availableFigRed); $i++) {
+							print $availableFigRed[$i];
+						}
+						//Skriver ut figurer som finns
+						for ( $i = 0; $i < count($availableFigGreen); $i++) {
+							print $availableFigGreen[$i];
+						}
 					
-					print("</table>");
+						print("</table>");
+					}	
 					
+					//Avsluta div för minifigurer
 					print("</div>");
 					
 					/***********************
@@ -318,6 +330,7 @@
 					
 					print ("<h3>Bitar</h3>");
 					
+						//Frågar efter bitarna i det sökta setet
 						$partsSearch= mysqli_query($connection,
 						"SELECT parts.Partname, inventory.ItemID, inventory.Quantity, inventory.ColorID,
 						images.has_gif, images.has_jpg, images.has_largegif, images.has_largejpg, colors.Colorname
@@ -326,10 +339,10 @@
 						inventory.ItemtypeID = 'P' AND inventory.ItemID=images.ItemID AND 
 						inventory.ColorID = images.ColorID AND inventory.ColorID = colors.ColorID");
 						
+						//Testar om sökningen gett ett resultat
 						if(mysqli_num_rows($partsSearch)< 1){
 						print("<p>Inga bitar i detta set!</p>");
 						}
-						
 						else{
 							print("<table>\n<tr>");
 							print ("<th>  </th>");
@@ -338,25 +351,25 @@
 							print ("<th> FigurID </th>");
 							print ("<th  class='vanish'> Färg </th>");
 							print ("<th> Antal i sats </th>");
-							print ("<th> Antal i samling </th>");
+							print ("<th> Antal i samling (godtyckling färg) </th>");
 							print ("</tr>\n");
 							
-						}	
-							$availableGreen= array();
-							$availableYellow = array();
-							$availableRed = array();
-							//$finnsinte[] = $row;
+							$availableGreen= array(); //bitar som finns i samlingen
+							$availableYellow = array(); //finns i rätt antal, men inte rätt färg
+							$availableRed = array(); //bitar som inte finns i samlingen
 						
-							//Varje bit
+							//Loopar för varje bit i satsen
 							while($partsRow = mysqli_fetch_array($partsSearch)) {
 								
 								$itemID = $partsRow['ItemID'];
-								$itemtype = 'P';
+								$itemtype = 'PL';
+								$filetype = ".jpg";
 								$partName = $partsRow['Partname'];
 								$colorID = $partsRow['ColorID'];
-								$inventQuant = $partsRow['Quantity'];
+								$inventQuant = $partsRow['Quantity']; //antalet av biten i sökta satsen
 								$colorName = $partsRow['Colorname'];
 								
+								//Ger antalet av biten för varje sats den finns i och antalet av den satsen
 								$bitQuantity = mysqli_query($connection,
 								"SELECT inventory.Quantity AS invQuantity, collection.Quantity AS colQuantity, inventory.ColorID
 								FROM inventory, collection
@@ -366,58 +379,57 @@
 								);
 								
 								
-								//Hämta hela bild-url
-								if($partsRow['has_gif'] OR $partsRow['has_largegif']){
-									$filetype = ".gif";
-								
+								//Undersöka om liten bild finns, sedan om gif finns
+								if($partsRow['has_gif'] OR $partsRow['has_jpg']){
+									$itemtype = 'P/'.$colorID;
+									
 									if($partsRow['has_gif']){
-										$itemtype = $itemtype."/".$colorID;
-									}
-									else {
-										$itemtype = 'PL';
+										$filetype = ".gif";
 									};
 								}
-								else{
-									$filetype = ".jpg";
-									
-									if($partsRow['has_jpg']){
-										$itemtype = $itemtype."/".$colorID;
-									}
-									else {
-										$itemtype = 'PL';
-									};
+								else if ($partsRow['has_largegif']){
+									$filetype = ".gif";
 								};
 								
+								//Bildkälla
 								$imgsrc = $urlBase.'/'.$itemtype.'/'.$itemID.$filetype;
 								
-								//Räkna ut colQuant (bitCounter)
-								$bitCounter = 0;
-								$mixedColorCounter = 0;
+								$bitCounter = 0; //Räknare för biten i rätt färg i samlingen
+								$mixedColorCounter = 0; //Räknare för biten i alla färger i samlingen
 								
-								//while loop för varje rad i sökningen
+								//Loopar för varje sats biten finns med i
 								while ($bitRow = mysqli_fetch_array($bitQuantity)){
 									$tempColorID = $bitRow['ColorID'];
 									
-									//$quantity = $bitRow['invQuantity'] ;
 									$quantity = $bitRow['invQuantity'] * $bitRow['colQuantity'];
 									 
-									//lägga på quantity till en counter
+									//testar om biten har rätt färg
 									if ($tempColorID == $colorID) {
 										$bitCounter += $quantity;
 									};
 									
-									//mixedColorCounter är antalet av en bit, oavsett färg
 									$mixedColorCounter += $quantity;
 									
 								}
 								
 								//AVAILABILITY-FÄRG
-								//OBS: Lägg till counter för fel färg i while-loopen
 								
-								//Testa om antal bitar i samlingen uppnår antal i satsen 
-								/*if($bitCounter < $inventQuant){
-									$imgsrcAvail = 'red';
-								}*/
+								//Tänkt optimering som inte fungerar felfritt
+								/*$imgsrcAvail;
+								$availabilityText;
+								$partInfo =
+									"<tr>
+									<td><img class='availInfo' src=$imgsrcAvail alt='$availabilityText'></td>
+									<td><img src=$imgsrc alt='$partName'></td>
+									<td class='vanish'>$partName</td>
+									<td class='vanish'>$itemID</td>
+									<td>$colorName</td>
+									<td>$inventQuant</td>
+									<td>$bitCounter ($mixedColorCounter)</td>
+									</tr>\n";
+								*/
+								
+								//Testar om antal bitar i samlingen uppnår antal i satsen 
 								if ($bitCounter >= $inventQuant){
 									$imgsrcAvail = '"img/green.svg"';
 									$availabilityText = 'Tillgänglig';
@@ -466,24 +478,26 @@
 								};
 							
 							}
-						
-						//ev array merge
-						for ( $i = 0; $i < count($availableRed); $i++) {
-							print $availableRed[$i];
-						}
-						
-						for ( $i = 0; $i < count($availableYellow); $i++) {
-							print $availableYellow[$i];
-						}
-						
-						for ( $i = 0; $i < count($availableGreen); $i++) {
-							print $availableGreen[$i];
-						}
+							
+							//Skriver ut bitar som inte finns tillräckligt av
+							for ( $i = 0; $i < count($availableRed); $i++) {
+								print $availableRed[$i];
+							}
+							//Skriver ut bitar som finns, men inte alla i rätt färg
+							for ( $i = 0; $i < count($availableYellow); $i++) {
+								print $availableYellow[$i];
+							}
+							//Skriver ut bitar där alla finns i rätt färg
+							for ( $i = 0; $i < count($availableGreen); $i++) {
+								print $availableGreen[$i];
+							}
+						}	
 						
 						print("</table>");
 							
-					
+					//Avslutar divven för bitar
 					print("</div>");
+				//Avslutar divven för bitar och figurer
 				 print("</div>");
 				?>
 			</div>
